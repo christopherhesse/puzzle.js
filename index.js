@@ -36,11 +36,22 @@ Point.prototype = {
   }
 }
 
+//-------------------------------------------------
+//--- Code snippet from The Math Vault ---
+//--- Calculate random (C) Antti Sykäri 2013 ---
+//-------------------------------------------------
+// http://stackoverflow.com/questions/521295/javascript-random-seeds
+var _random_state = 1
+var random = function() {
+    var x = Math.sin(_random_state++) * 10000
+    return x - Math.floor(x)
+}
+
 // global
 
 var g = {}
 
-var MATCH_DISTANCE = 10
+var MATCH_DISTANCE = 20
 var PIECE_SIZE = 200
 
 var UP = 0
@@ -299,16 +310,6 @@ var match_pieces = function(piece) {
   }
 }
 
-var main = function() {
-  document.body.style['background-color'] = '#534'
-
-  g.image = new Image()
-  g.image.src = 'picture.png';
-  g.image.onload = function() {
-    setup_game()
-  }
-}
-
 var setup_game = function() {
   g.col_count = Math.floor(g.image.width / PIECE_SIZE)
   g.row_count = Math.floor(g.image.height / PIECE_SIZE)
@@ -316,7 +317,7 @@ var setup_game = function() {
   g.max_z_index = 0
   g.edge_paths = {}
 
-  // create edges
+  // create edge paths
   for (var tile = 0; tile < g.tile_count; tile++) {
     g.edge_paths[tile] = {}
   }
@@ -331,9 +332,9 @@ var setup_game = function() {
       if (neighbor_tile === null) {
         g.edge_paths[tile][d] = FLAT_EDGE_PATH
       } else {
-        var y1 = Math.floor(Math.random() * 10)
-        var y2 = Math.floor(Math.random() * 10)
-        var y3 = Math.floor(Math.random() * 10)
+        var y1 = Math.floor(random() * 10)
+        var y2 = Math.floor(random() * 10)
+        var y3 = Math.floor(random() * 10)
         var edge_path = new Path([
           {op: 'l', x: 50, y: y1},
           {op: 'l', x: 50, y: y2},
@@ -349,10 +350,13 @@ var setup_game = function() {
     }
   }
 
+  // create a piece for each tile
   for (var tile = 0; tile < g.tile_count; tile++) {
     var piece = create_piece([tile])
-    piece.style.top = Math.random() * 300
-    piece.style.left = Math.random() * 1000
+    // piece.style.top = Math.random() * 300
+    // piece.style.left = Math.random() * 1000
+    piece.style.top = 150
+    piece.style.left = 300 * tile
     document.body.appendChild(piece)
   }
 
@@ -366,6 +370,7 @@ var setup_game = function() {
   // var piece = create_piece([0, 3, 4])
   // document.body.appendChild(piece)
 
+  // setup handlers for clicking on the pieces
   var active_piece = null
   var active_cursor_point = null
 
@@ -420,201 +425,14 @@ var setup_game = function() {
   }
 }
 
+var main = function() {
+  document.body.style['background-color'] = '#534'
+
+  g.image = new Image()
+  g.image.src = 'picture.png';
+  g.image.onload = function() {
+    setup_game()
+  }
+}
+
 window.onload = main
-
-
-//  {
-  // console.log(tile, direction, neighbor_tile)
-  // var edge = parse_path_spec('l 200 0')
-  // var edge =
-  //
-  // if (neighbor_tile === null) {
-  //   var edge = parse_path_spec('l 100 0')
-  //   g.edge_paths[tile][direction] = edge
-  // } else {
-  //   var edge = parse_path_spec('l 40 20 l 60 -20')
-  //   g.edge_paths[tile][direction] = edge
-  //   g.edge_paths[neighbor_tile][invert_direction(direction)] = invert_ops(edge)
-  // }
-// }
-
-// var path_f = function(c) {
-//   c.beginPath()
-//   c.moveTo(20, 20)
-//   if (tiles.indexOf(get_neighbor_tile(tile, UP)) == -1) {
-//     c.lineTo(120, 0)
-//   }
-//   c.lineTo(220, 20)
-//   if (tiles.indexOf(get_neighbor_tile(tile, RIGHT)) == -1) {
-//     c.lineTo(240, 120)
-//   }
-//   c.lineTo(220, 220)
-//   if (tiles.indexOf(get_neighbor_tile(tile, DOWN)) == -1) {
-//     c.lineTo(120, 200)
-//   }
-//   c.lineTo(20, 220)
-//   if (tiles.indexOf(get_neighbor_tile(tile, LEFT)) == -1) {
-//     c.lineTo(40, 120)
-//   }
-//   c.closePath()
-// }
-
-// var p = document.createElement('canvas')
-// p.style.top = 0
-// p.style.left = 0
-// p.width = 500
-// p.height = 500
-// p.style.border = '1px solid red'
-// document.body.appendChild(p)
-// var ctx = p.getContext('2d')
-//
-//
-//
-// return
-  // ctx.lineTo(40, (Math.random() - 0.5) * 20)
-  // ctx.lineTo(60, (Math.random() - 0.5) * 20)
-  // ctx.save()
-  // console.log(invert)
-  // if (invert) {
-  //   ctx.translate(100, 0)
-  //   ctx.rotate(Math.PI)
-  // }
-
-// ctx.lineTo(40, 20)
-// ctx.lineTo(100, 0)
-// ctx.moveTo(100, 0)
-// ctx.strokeStyle = 'blue'
-// ctx.lineWidth = 1
-// ctx.stroke()
-// if (invert) {
-//   ctx.moveTo(0, 0)
-// }
-// ctx.restore()
-// var highlight_piece = function(piece) {
-//   var ctx = piece.getContext('2d')
-//
-//   ctx.beginPath()
-//   ctx.moveTo(20, 20)
-//   ctx.lineTo(120, 20)
-//   ctx.lineTo(120, 120)
-//   ctx.lineTo(20, 120)
-//   ctx.closePath()
-//   // ctx.moveTo(0, 0)
-//   // ctx.lineTo(200, 0)
-//   // ctx.lineTo(200, 200)
-//   // ctx.lineTo(0, 200)
-//   // ctx.closePath()
-//   // ctx.shadowColor = '#9ecaed'
-//   // ctx.shadowBlur = 20
-//   // ctx.shadowOffsetX = 0
-//   // ctx.shadowOffsetY = 0
-//   // ctx.fill()
-//   var gradient = ctx.createLinearGradient(0, 0, 170, 0);
-//   gradient.addColorStop("0", "magenta");
-//   gradient.addColorStop("0.5", "blue");
-//   gradient.addColorStop("1.0", "red");
-//   ctx.strokeStyle = gradient
-//   ctx.lineWidth=20;
-//   ctx.stroke()
-// }
-//
-// var unhighlight_piece = function(piece) {
-// }
-
-// ctx.beginPath()
-// ctx.arc(100, 100, 100, 0, 2*Math.PI, false)
-
-
-// var Path() {
-//   this.calls = []
-// }
-//
-// Path.prototype = {
-//   moveTo: function(x, y) {
-//     this.calls.push('moveTo', x, y)
-//   }
-//
-//   render: function(ctx) {
-//     for (var i = 0; i < this.calls.length; i++) {
-//       call = this.calls[i]
-//       ctx[call[0]].apply(ctx, )
-//     }
-//   }
-// }
-
-  // highlighting
-  // for (var i = 0; i < 3; i++) {
-  // ctx.fill();
-  // }
-// ctx.save()
-  // render highlighted piece
-// ctx.imageSmoothingEnabled = true;
-  // ctx.beginPath()
-  // ctx.moveTo(20, 20)
-  // ctx.lineTo(120, 0)
-  // ctx.lineTo(220, 20)
-  // ctx.lineTo(220, 220)
-  // ctx.lineTo(120, 200)
-  // ctx.lineTo(20, 220)
-  // ctx.closePath()
-
-      // ctx.arc(100, 100, 100, 0, 2 * Math.PI, false);
-  // ctx.shadowColor = '#9ecaed';
-  // ctx.shadowBlur = 20;
-  // ctx.shadowOffsetX = 0;
-  // ctx.shadowOffsetY = 0;
-  // ctx.fill();
-  // var gradient = ctx.createLinearGradient(0, 0, 170, 0);
-  // gradient.addColorStop("0", "magenta");
-  // gradient.addColorStop("0.5", "blue");
-  // gradient.addColorStop("1.0", "red");
-  // ctx.strokeStyle = gradient
-  // ctx.lineWidth=20;
-  // ctx.stroke()
-  // ctx.clip()
-
-
-// function neighbors(tile) {
-//   // neighbor direction matters for distance calculation
-//   // check distance from each edge of tile to edge of matching tile
-//   // more simple: compare relative position of tiles to see if they
-//   // are in the correct relative positions
-//   // still need to get tile position somehow
-//   var row = tile_to_row(tile)
-//   var col = tile_to_col(tile)
-//   var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-//   var tiles = []
-//   for (var i = 0; i < offsets.length; i++) {
-//     var r = row + offsets[i][0]
-//     var c = col + offsets[i][1]
-//     if (r < 0 || r > row_count || c < 0 || c > col_count) {
-//       continue
-//     }
-//     tiles.push(row_col_to_tile(r, c))
-//   }
-//   return tiles
-// }
-
-// function match_distance(first_tile, second_tile) {
-// }
-// function create_elem(type) {
-//   return document.createElementNS('http://www.w3.org/2000/svg', type)
-// }
-
-// var svg = create_elem('svg')
-// svg.setAttribute('width', 1000)
-// svg.setAttribute('height', 1000)
-// document.body.appendChild(svg)
-
-// var SVGObj = create_elem('rect')
-// SVGObj.width.baseVal.value = 100
-// SVGObj.height.baseVal.value = 100
-// SVGObj.style.fill = 'blue'
-// svg.appendChild(SVGObj)
-
-// var img = create_elem('image')
-// img.setAttribute('width', 500)
-// img.setAttribute('height', 500)
-// img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'picture.jpg')
-// img.setAttribute('clip-path', 'url(#clipping)')
-// svg.appendChild(img)
