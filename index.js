@@ -341,9 +341,6 @@ var setup_game = function() {
           {op: 'l', x: 50, y: y3},
           {op: 'l', x: 50, y: -(y1 + y2 + y3)},
         ])
-        // var edge = parse_path_spec('l 50 0 l 50 10 l 50 -10 l 50 0')
-        // var edge = parse_path_spec('l 100 20 l 100 -20')
-        // var edge = parse_path_spec('l 50 0 L 200 0')
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path.invert()
       }
@@ -353,10 +350,10 @@ var setup_game = function() {
   // create a piece for each tile
   for (var tile = 0; tile < g.tile_count; tile++) {
     var piece = create_piece([tile])
-    // piece.style.top = Math.random() * 300
-    // piece.style.left = Math.random() * 1000
-    piece.style.top = 150
-    piece.style.left = 300 * tile
+    piece.style.top = Math.random() * 300
+    piece.style.left = Math.random() * 1000
+    // piece.style.top = 150
+    // piece.style.left = 300 * tile
     document.body.appendChild(piece)
   }
 
@@ -433,6 +430,15 @@ var main = function() {
   g.image.onload = function() {
     setup_game()
   }
+
+  // var p = document.createElement('canvas')
+  // p.style.top = 0
+  // p.style.left = 0
+  // p.width = 500
+  // p.height = 500
+  // p.style.border = '1px solid red'
+  // document.body.appendChild(p)
+  // var ctx = p.getContext('2d')
 }
 
 window.onload = main
