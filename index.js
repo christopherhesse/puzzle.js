@@ -96,6 +96,9 @@ var row_col_to_tile = function(row, col) {
   return col + row * g.col_count
 }
 
+var RELATIVE_LINE = 0
+var RELATIVE_BEZIER = 1
+
 var Path = function(spec_or_commands) {
   if (typeof(spec_or_commands) == 'string') {
     var parts = spec_or_commands.split(' ')
@@ -116,14 +119,16 @@ Path.prototype = {
   render: function(ctx) {
     var pos = new Point(0, 0)
     for (var i = 0; i < this.commands.length; i++) {
-      var command = this.commands[i]
-      if (command.op == 'l') {
-        pos.x += command.x
-        pos.y += command.y
+      var c = this.commands[i]
+      if (c.op == RELATIVE_LINE) {
+        pos.x += c.x
+        pos.y += c.y
+        ctx.lineTo(pos.x, pos.y)
+      } else if (c.op == RELATIVE_BEZIER) {
+        // ctx.bezierCurveTo()
       } else {
-        throw 'invalid op: ' + command.op
+        throw 'invalid op: ' + c.op
       }
-      ctx.lineTo(pos.x, pos.y)
     }
   },
   invert: function() {
@@ -131,7 +136,7 @@ Path.prototype = {
   },
 }
 
-var FLAT_EDGE_PATH = new Path([{op: 'l', x: PIECE_SIZE, y: 0}])
+var FLAT_EDGE_PATH = new Path([{op: RELATIVE_LINE, x: PIECE_SIZE, y: 0}])
 
 var create_piece = function(tiles) {
   var rows = tiles.map(tile_to_row)
@@ -171,7 +176,6 @@ var create_piece = function(tiles) {
       ctx.translate(border_width, border_width)
       ctx.beginPath()
       ctx.moveTo(0, 0)
-
       for (var d = 0; d < DIRECTIONS; d++) {
         if (tiles.indexOf(get_neighbor_tile(tile, d)) == -1) {
           var edge_path = g.edge_paths[tile][d]
@@ -182,10 +186,7 @@ var create_piece = function(tiles) {
         ctx.translate(PIECE_SIZE, 0)
         ctx.rotate(Math.PI / 2)
       }
-
       ctx.closePath()
-      ctx.fillStyle = 'blue'
-      ctx.fill()
 
       ctx.restore()
     }
@@ -336,10 +337,10 @@ var setup_game = function() {
         var y2 = Math.floor(random() * 10)
         var y3 = Math.floor(random() * 10)
         var edge_path = new Path([
-          {op: 'l', x: 50, y: y1},
-          {op: 'l', x: 50, y: y2},
-          {op: 'l', x: 50, y: y3},
-          {op: 'l', x: 50, y: -(y1 + y2 + y3)},
+          {op: RELATIVE_LINE, x: 50, y: y1},
+          {op: RELATIVE_LINE, x: 50, y: y2},
+          {op: RELATIVE_LINE, x: 50, y: y3},
+          {op: RELATIVE_LINE, x: 50, y: -(y1 + y2 + y3)},
         ])
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path.invert()
@@ -427,18 +428,45 @@ var main = function() {
 
   g.image = new Image()
   g.image.src = 'picture.png';
-  g.image.onload = function() {
-    setup_game()
-  }
+  // g.image.onload = function() {
+  //   setup_game()
+  // }
 
-  // var p = document.createElement('canvas')
-  // p.style.top = 0
-  // p.style.left = 0
-  // p.width = 500
-  // p.height = 500
-  // p.style.border = '1px solid red'
-  // document.body.appendChild(p)
-  // var ctx = p.getContext('2d')
+  var p = document.createElement('canvas')
+  p.style.top = 0
+  p.style.left = 0
+  p.width = 500
+  p.height = 500
+  p.style.border = '1px solid red'
+  document.body.appendChild(p)
+  var ctx = p.getContext('2d')
+  ctx.translate(20,20)
+  ctx.beginPath()
+  ctx.moveTo(0,0)
+
+  ctx.bezierCurveTo(110,102,130,80,100,0);
+  ctx.lineTo(100, 0)
+  ctx.strokeStyle = 'blue'
+  ctx.lineWidth = 10
+  ctx.stroke()
 }
 
 window.onload = main
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////
