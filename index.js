@@ -303,7 +303,7 @@ var main = function() {
   document.body.style['background-color'] = '#534'
 
   g.image = new Image()
-  g.image.src = 'picture-small.png';
+  g.image.src = 'picture.png';
   g.image.onload = function() {
     setup_game()
   }
