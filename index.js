@@ -349,22 +349,22 @@ var setup_game = function() {
     }
   }
 
-  // for (var tile = 0; tile < g.tile_count; tile++) {
-  //   var piece = create_piece([tile])
-  //   piece.style.top = Math.random() * 300
-  //   piece.style.left = Math.random() * 1000
-  //   document.body.appendChild(piece)
-  // }
+  for (var tile = 0; tile < g.tile_count; tile++) {
+    var piece = create_piece([tile])
+    piece.style.top = Math.random() * 300
+    piece.style.left = Math.random() * 1000
+    document.body.appendChild(piece)
+  }
 
   // var piece = create_piece([1])
   // piece.style.top = Math.random() * 300
   // piece.style.left = Math.random() * 1000
   // document.body.appendChild(piece)
 
-  var piece = create_piece([1, 2, 5])
-  document.body.appendChild(piece)
-  var piece = create_piece([0, 3, 4])
-  document.body.appendChild(piece)
+  // var piece = create_piece([1, 2, 5])
+  // document.body.appendChild(piece)
+  // var piece = create_piece([0, 3, 4])
+  // document.body.appendChild(piece)
 
   var active_piece = null
   var active_cursor_point = null
