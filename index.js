@@ -281,8 +281,7 @@ var match_nearby_pieces = function(piece) {
 
         // place
         var new_neighbor_tile_position = get_tile_position(new_piece, neighbor_tile)
-        var piece_offset = neighbor_tile_position.subtract(
-          new_neighbor_tile_position)
+        var piece_offset = neighbor_tile_position.subtract(new_neighbor_tile_position)
         new_piece.style.top = piece_offset.y
         new_piece.style.left = piece_offset.x
 
@@ -448,45 +447,6 @@ var main = function() {
   g.image.onload = function() {
     setup_game()
   }
-
-  // var p = document.createElement('canvas')
-  // p.style.top = 0
-  // p.style.left = 0
-  // p.width = 500
-  // p.height = 500
-  // p.style.border = '1px solid red'
-  // document.body.appendChild(p)
-  // var ctx = p.getContext('2d')
-  // ctx.translate(100, 100)
-  // ctx.beginPath()
-  // ctx.moveTo(0,0)
-  // console.log(p.to_string())
-  // // console.log(p.invert().to_string())
-  // //
-  // // p.render(ctx)
-  // // // p.invert().render(ctx)
-  // // ctx.lineTo(200, 0)
-  // // // ctx.bezierCurveTo(110,102,130,80,100,0);
-  // // // ctx.lineTo(100, 0)
-  //
-  //
-  // ctx.save()
-  //
-  // ctx.translate(100, 100)
-  // ctx.beginPath()
-  // ctx.moveTo(0, 0)
-  // ctx.rotate(Math.PI / 2)
-  // // ctx.scale(-1, -1)
-  // for (var d = 0; d < DIRECTIONS; d++) {
-  //   p.render(ctx)
-  //   ctx.lineTo(PIECE_SIZE, 0)
-  //   ctx.translate(PIECE_SIZE, 0)
-  //   ctx.rotate(-Math.PI / 2)
-  // }
-  // ctx.closePath()
-  // ctx.fill()
-  //
-  // ctx.restore()
 }
 
 window.onload = main
