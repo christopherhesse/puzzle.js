@@ -52,7 +52,7 @@ var random = function() {
 var g = {}
 
 var MATCH_DISTANCE = 20
-var PIECE_SIZE = 100
+var PIECE_SIZE = 200
 
 var UP = 0
 var RIGHT = 1
@@ -99,44 +99,8 @@ var row_col_to_tile = function(row, col) {
 var LINE = 0
 var BEZIER = 1
 
-var Path = function(spec_or_commands) {
-  // if (typeof(spec_or_commands) == 'string') {
-  //   var parts = spec_or_commands.split(' ')
-  //   var i = 0
-  //   this.commands = []
-  //   while (i < parts.length) {
-  //     var op = parts[i++]
-  //     if (op == 'L') {
-  //       var x = parseInt(parts[i++])
-  //       var y = parseInt(parts[i++])
-  //       this.commands.push({
-  //         op: LINE,
-  //         x: x,
-  //         y: y
-  //       })
-  //     } else if (op == 'C') {
-  //       var cp1x = parseInt(parts[i++])
-  //       var cp1y = parseInt(parts[i++])
-  //       var cp2x = parseInt(parts[i++])
-  //       var cp2y = parseInt(parts[i++])
-  //       var x = parseInt(parts[i++])
-  //       var y = parseInt(parts[i++])
-  //       this.commands.push({
-  //         op: BEZIER,
-  //         cp1x: cp1x,
-  //         cp1y: cp1y,
-  //         cp2x: cp2x,
-  //         cp2y: cp2y,
-  //         x: x,
-  //         y: y
-  //       })
-  //     } else {
-  //       throw 'invalid op: ' + op
-  //     }
-  //   }
-  // } else {
-    this.commands = spec_or_commands
-  // }
+var Path = function(commands) {
+  this.commands = commands
 }
 
 Path.prototype = {
@@ -150,37 +114,6 @@ Path.prototype = {
       }
     }
   },
-  // invert: function() {
-  //   var commands = JSON.parse(JSON.stringify(this.commands))
-  //   commands.reverse()
-  //   for (var i = 0; i < commands.length; i++) {
-  //     var c = commands[i]
-  //     if (c.op == LINE) {
-  //       c.x = PIECE_SIZE - c.x
-  //       c.y = -1 * c.y
-  //     } else if (c.op == BEZIER) {
-  //       c.cp1x = PIECE_SIZE - c.cp1x
-  //       c.cp1y = -1 * c.cp1y
-  //       c.cp2x = PIECE_SIZE - c.cp2x
-  //       c.cp2y = -1 * c.cp2y
-  //       c.x = PIECE_SIZE - c.x
-  //       c.y = -1 * c.y
-  //     }
-  //   }
-  //   return new Path(commands)
-  // },
-  // to_string: function() {
-  //   var parts = []
-  //   for (var i = 0; i < this.commands.length; i++) {
-  //     var c = this.commands[i]
-  //     if (c.op == LINE) {
-  //       parts.push(['L', c.x, c.y].join(' '))
-  //     } else if (c.op == BEZIER) {
-  //       parts.push(['C', c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.x, c.y].join(' '))
-  //     }
-  //   }
-  //   return parts.join(' ')
-  // },
 }
 
 var create_piece = function(tiles) {
@@ -402,28 +335,30 @@ var setup_game = function() {
         var y1 = Math.floor(random() * 10)
         var y2 = Math.floor(random() * 10)
         var y3 = Math.floor(random() * 10)
-        var edge_path = new Path([
-          {
-            op: LINE,
-            x: PIECE_SIZE * 1/4,
-            y: y1
-          },
-          {
-            op: LINE,
-            x: PIECE_SIZE * 2/4,
-            y: y2
-          },
-          {
-            op: LINE,
-            x: PIECE_SIZE * 3/4,
-            y: y3
-          },
-          {
-            op: LINE,
-            x: PIECE_SIZE * 4/4,
-            y: 0
-          },
-        ])
+        // var edge_path = new Path([
+        //   {
+        //     op: LINE,
+        //     x: PIECE_SIZE * 1/4,
+        //     y: y1
+        //   },
+        //   {
+        //     op: LINE,
+        //     x: PIECE_SIZE * 2/4,
+        //     y: y2
+        //   },
+        //   {
+        //     op: LINE,
+        //     x: PIECE_SIZE * 3/4,
+        //     y: y3
+        //   },
+        //   {
+        //     op: LINE,
+        //     x: PIECE_SIZE * 4/4,
+        //     y: 0
+        //   },
+        // ])
+
+        var edge_path = new Path([{op: LINE, x: 75, y: 0}, {op: BEZIER, cp1x: 75, cp1y: 30, cp2x: 125, cp2y: 30, x: 125, y: 0}, {op: LINE, x: 200, y:0}])
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path
       }
@@ -524,7 +459,6 @@ var main = function() {
   // ctx.translate(100, 100)
   // ctx.beginPath()
   // ctx.moveTo(0,0)
-  // var p = new Path([{op: LINE, x: 50, y: 0}, {op: BEZIER, cp1x: 50, cp1y: 20, cp2x: 100, cp2y: 20, x: 100, y: 0}])
   // console.log(p.to_string())
   // // console.log(p.invert().to_string())
   // //
