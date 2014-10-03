@@ -100,43 +100,43 @@ var LINE = 0
 var BEZIER = 1
 
 var Path = function(spec_or_commands) {
-  if (typeof(spec_or_commands) == 'string') {
-    var parts = spec_or_commands.split(' ')
-    var i = 0
-    this.commands = []
-    while (i < parts.length) {
-      var op = parts[i++]
-      if (op == 'L') {
-        var x = parseInt(parts[i++])
-        var y = parseInt(parts[i++])
-        this.commands.push({
-          op: LINE,
-          x: x,
-          y: y
-        })
-      } else if (op == 'C') {
-        var cp1x = parseInt(parts[i++])
-        var cp1y = parseInt(parts[i++])
-        var cp2x = parseInt(parts[i++])
-        var cp2y = parseInt(parts[i++])
-        var x = parseInt(parts[i++])
-        var y = parseInt(parts[i++])
-        this.commands.push({
-          op: BEZIER,
-          cp1x: cp1x,
-          cp1y: cp1y,
-          cp2x: cp2x,
-          cp2y: cp2y,
-          x: x,
-          y: y
-        })
-      } else {
-        throw 'invalid op: ' + op
-      }
-    }
-  } else {
+  // if (typeof(spec_or_commands) == 'string') {
+  //   var parts = spec_or_commands.split(' ')
+  //   var i = 0
+  //   this.commands = []
+  //   while (i < parts.length) {
+  //     var op = parts[i++]
+  //     if (op == 'L') {
+  //       var x = parseInt(parts[i++])
+  //       var y = parseInt(parts[i++])
+  //       this.commands.push({
+  //         op: LINE,
+  //         x: x,
+  //         y: y
+  //       })
+  //     } else if (op == 'C') {
+  //       var cp1x = parseInt(parts[i++])
+  //       var cp1y = parseInt(parts[i++])
+  //       var cp2x = parseInt(parts[i++])
+  //       var cp2y = parseInt(parts[i++])
+  //       var x = parseInt(parts[i++])
+  //       var y = parseInt(parts[i++])
+  //       this.commands.push({
+  //         op: BEZIER,
+  //         cp1x: cp1x,
+  //         cp1y: cp1y,
+  //         cp2x: cp2x,
+  //         cp2y: cp2y,
+  //         x: x,
+  //         y: y
+  //       })
+  //     } else {
+  //       throw 'invalid op: ' + op
+  //     }
+  //   }
+  // } else {
     this.commands = spec_or_commands
-  }
+  // }
 }
 
 Path.prototype = {
@@ -150,37 +150,37 @@ Path.prototype = {
       }
     }
   },
-  invert: function() {
-    var commands = JSON.parse(JSON.stringify(this.commands))
-    commands.reverse()
-    for (var i = 0; i < commands.length; i++) {
-      var c = commands[i]
-      if (c.op == LINE) {
-        c.x = PIECE_SIZE - c.x
-        c.y = -1 * c.y
-      } else if (c.op == BEZIER) {
-        c.cp1x = PIECE_SIZE - c.cp1x
-        c.cp1y = -1 * c.cp1y
-        c.cp2x = PIECE_SIZE - c.cp2x
-        c.cp2y = -1 * c.cp2y
-        c.x = PIECE_SIZE - c.x
-        c.y = -1 * c.y
-      }
-    }
-    return new Path(commands)
-  },
-  to_string: function() {
-    var parts = []
-    for (var i = 0; i < this.commands.length; i++) {
-      var c = this.commands[i]
-      if (c.op == LINE) {
-        parts.push(['L', c.x, c.y].join(' '))
-      } else if (c.op == BEZIER) {
-        parts.push(['C', c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.x, c.y].join(' '))
-      }
-    }
-    return parts.join(' ')
-  },
+  // invert: function() {
+  //   var commands = JSON.parse(JSON.stringify(this.commands))
+  //   commands.reverse()
+  //   for (var i = 0; i < commands.length; i++) {
+  //     var c = commands[i]
+  //     if (c.op == LINE) {
+  //       c.x = PIECE_SIZE - c.x
+  //       c.y = -1 * c.y
+  //     } else if (c.op == BEZIER) {
+  //       c.cp1x = PIECE_SIZE - c.cp1x
+  //       c.cp1y = -1 * c.cp1y
+  //       c.cp2x = PIECE_SIZE - c.cp2x
+  //       c.cp2y = -1 * c.cp2y
+  //       c.x = PIECE_SIZE - c.x
+  //       c.y = -1 * c.y
+  //     }
+  //   }
+  //   return new Path(commands)
+  // },
+  // to_string: function() {
+  //   var parts = []
+  //   for (var i = 0; i < this.commands.length; i++) {
+  //     var c = this.commands[i]
+  //     if (c.op == LINE) {
+  //       parts.push(['L', c.x, c.y].join(' '))
+  //     } else if (c.op == BEZIER) {
+  //       parts.push(['C', c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.x, c.y].join(' '))
+  //     }
+  //   }
+  //   return parts.join(' ')
+  // },
 }
 
 var create_piece = function(tiles) {
@@ -209,11 +209,6 @@ var create_piece = function(tiles) {
   p.tile_centers = {}
   for (var i = 0; i < tiles.length; i++) {
     var tile = tiles[i]
-    var clockwise = tile % 2 == 1
-    var src = tile_to_center(tile).subtract(center_to_corner)
-    var dst = src.subtract(piece_offset).add(border)
-    p.tile_centers[tile] = dst
-    p.tiles.push(tile)
 
     var mask_f = function(ctx) {
       ctx.save()
@@ -222,31 +217,33 @@ var create_piece = function(tiles) {
       ctx.beginPath()
       ctx.moveTo(0, 0)
 
+      // checkerboard pattern
+      var even = function(n) { return n % 2 == 0 }
+      var clockwise = even(tile_to_row(tile)) == even(tile_to_col(tile))
+
       if (clockwise) {
-        for (var d = 0; d < DIRECTIONS; d++) {
-          if (tiles.indexOf(get_neighbor_tile(tile, d)) == -1) {
-            var edge_path = g.edge_paths[tile][d]
-            if (edge_path !== null) {
-              edge_path.render(ctx)
-            }
-          }
-          ctx.lineTo(PIECE_SIZE, 0)
-          ctx.translate(PIECE_SIZE, 0)
-          ctx.rotate(Math.PI / 2)
-        }
+        var directions = [UP, RIGHT, DOWN, LEFT]
+        var angle = Math.PI / 2
       } else {
-          ctx.rotate(Math.PI / 2)
-          for (var d = DIRECTIONS - 1; d >= 0; d--) {
-            if (tiles.indexOf(get_neighbor_tile(tile, d)) == -1) {
-              var edge_path = g.edge_paths[tile][d]
-              if (edge_path !== null) {
-                edge_path.render(ctx)
-              }
-            }
-            ctx.lineTo(PIECE_SIZE, 0)
-            ctx.translate(PIECE_SIZE, 0)
-            ctx.rotate(-Math.PI / 2)
-          }
+        var directions = [LEFT, DOWN, RIGHT, UP]
+        var angle = -Math.PI / 2
+        ctx.rotate(Math.PI / 2)
+      }
+
+      for (var i = 0; i < directions.length; i++) {
+        var d = directions[i]
+        var edge_path = null
+        if (tiles.indexOf(get_neighbor_tile(tile, d)) == -1) {
+          edge_path = g.edge_paths[tile][d]
+        }
+
+        if (edge_path !== null) {
+          edge_path.render(ctx)
+        } else {
+          ctx.lineTo(PIECE_SIZE, 0)
+        }
+        ctx.translate(PIECE_SIZE, 0)
+        ctx.rotate(angle)
       }
 
       ctx.closePath()
@@ -270,6 +267,10 @@ var create_piece = function(tiles) {
       return c
     }
 
+    var src = tile_to_center(tile).subtract(center_to_corner)
+    var dst = src.subtract(piece_offset).add(border)
+    p.tile_centers[tile] = dst
+    p.tiles.push(tile)
     var masked_image = mask_image(mask_f, g.image, src, size)
     ctx.drawImage(masked_image, dst.x, dst.y)
   }
@@ -417,6 +418,11 @@ var setup_game = function() {
             x: PIECE_SIZE * 3/4,
             y: y3
           },
+          {
+            op: LINE,
+            x: PIECE_SIZE * 4/4,
+            y: 0
+          },
         ])
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path
@@ -427,8 +433,8 @@ var setup_game = function() {
   // create a piece for each tile
   for (var tile = 0; tile < g.tile_count; tile++) {
     var piece = create_piece([tile])
-      piece.style.top = Math.random() * 300
-      piece.style.left = Math.random() * 1000
+    piece.style.top = Math.random() * 300
+    piece.style.left = Math.random() * 1000
     // piece.style.top = 150
     // piece.style.left = 300 * tile
     document.body.appendChild(piece)
@@ -454,19 +460,18 @@ var setup_game = function() {
       var point = new Point(e.x, e.y)
 
       // convert node list to array
-      var pieces = Array.prototype.slice.call(document.getElementsByClassName(
-          'piece'))
-        // sort by descending z-index
+      var pieces = Array.prototype.slice.call(document.getElementsByClassName('piece'))
+      // sort by descending z-index
       pieces.sort(function(a, b) {
         return parseInt(b.style['z-index']) - parseInt(a.style['z-index'])
       })
       for (var i = 0; i < pieces.length; i++) {
         var piece = pieces[i]
         var offset_point = point.subtract(new Point(piece.offsetLeft, piece.offsetTop))
-          // check if the offset is inside of the piece
+        // check if the offset is inside of the piece
         if (0 <= offset_point.x && offset_point.x <= piece.width && 0 <= offset_point.y && offset_point.y <= piece.height) {
           var pixel = piece.getContext('2d').getImageData(offset_point.x, offset_point.y, 1, 1).data
-            // only count the click if it's on a non-transparent pixel
+          // only count the click if it's on a non-transparent pixel
           if (pixel[3] != 0) {
             active_cursor_point = offset_point
             active_piece = piece
