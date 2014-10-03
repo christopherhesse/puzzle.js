@@ -332,9 +332,9 @@ var setup_game = function() {
       if (neighbor_tile === null) {
         g.edge_paths[tile][d] = null
       } else {
-        var y1 = Math.floor(random() * 10)
-        var y2 = Math.floor(random() * 10)
-        var y3 = Math.floor(random() * 10)
+        // var y1 = Math.floor(random() * 10)
+        // var y2 = Math.floor(random() * 10)
+        // var y3 = Math.floor(random() * 10)
         // var edge_path = new Path([
         //   {
         //     op: LINE,
@@ -357,8 +357,9 @@ var setup_game = function() {
         //     y: 0
         //   },
         // ])
-
-        var edge_path = new Path([{op: LINE, x: 75, y: 0}, {op: BEZIER, cp1x: 75, cp1y: 30, cp2x: 125, cp2y: 30, x: 125, y: 0}, {op: LINE, x: 200, y:0}])
+        var sign = function(x) { return x ? x < 0 ? -1 : 1 : 0 }
+        var s = sign(random()-0.5)
+        var edge_path = new Path([{op: LINE, x: 75, y: 0}, {op: BEZIER, cp1x: 75, cp1y: s * 30, cp2x: 125, cp2y: s * 30, x: 125, y: 0}, {op: LINE, x: 200, y:0}])
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path
       }
