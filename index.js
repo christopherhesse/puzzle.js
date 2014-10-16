@@ -33,7 +33,10 @@ Point.prototype = {
   },
   magnitude: function() {
     return Math.sqrt(this.x * this.x + this.y * this.y)
-  }
+  },
+  normalized: function() {
+    return new Point(this.x / this.magnitude(), this.y / this.magnitude())
+  },
 }
 
 //-------------------------------------------------
@@ -356,9 +359,61 @@ var setup_game = function() {
         //     y: 0
         //   },
         // ])
-        var sign = function(x) { return x ? x < 0 ? -1 : 1 : 0 }
-        var s = sign(random()-0.5)
-        var edge_path = new Path([{op: LINE, x: 75, y: 0}, {op: BEZIER, cp1x: 75, cp1y: s * 30, cp2x: 125, cp2y: s * 30, x: 125, y: 0}, {op: LINE, x: 200, y:0}])
+        // var sign = function(x) { return x ? x < 0 ? -1 : 1 : 0 }
+        // var s = sign(random()-0.5)
+        // var edge_path = new Path([
+        //   {op: LINE, x: 75, y: 0},
+        //   {op: BEZIER, cp1x: 75, cp1y: s * 30, cp2x: 125, cp2y: s * 30, x: 125, y: 0},
+        //   {op: LINE, x: 200, y:0}
+        // ])
+        // bezier curves with symmetric control points, variable magnitude
+        var points = [
+          new Point(0, 0), // 1
+          new Point(90, 0), // 2
+          new Point(90, 10), // 3
+          new Point(85, 20), // 4
+          new Point(100, 30), // 5
+          new Point(115, 20), // 6
+          new Point(110, 10), // 7
+          new Point(110, 0), // 8
+          new Point(200, 0), // 9
+        ]
+        // TODO: replace these with magnitudes? how to get slope?
+        // var directions = [
+        //   new Point(0, 0), // 1
+        //   new Point(5, 5), // 2
+        //   new Point(-5, 5), // 3
+        //   new Point(0, 10), // 4
+        //   new Point(10, 0), // 5
+        //   new Point(0, -10), // 6
+        //   new Point(-5, -5), // 7
+        //   new Point(5, -5), // 8
+        //   new Point(0, 0), // 9
+        // ]
+        var directions = [
+          new Point(0, 0), // 1
+          new Point(0, 0), // 2
+          new Point(0, 0), // 3
+          new Point(0, 0), // 4
+          new Point(0, 0), // 5
+          new Point(0, 0), // 6
+          new Point(0, 0), // 7
+          new Point(0, 0), // 8
+          new Point(0, 0), // 9
+        ]
+        var commands = []
+        for (var i = 0; i < points.length - 1; i++) {
+          var previous_point = points[i]
+          var current_point = points[i+1]
+          var next_point = points[i+2]
+          previous_point.subtract(current_point).normalized() + next_point.subtract(current_point).normalized()
+          var cp1 = previous_point.add(directions[i])
+          var cp2 = current_point.subtract(directions[i+1])
+          commands.push({op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y})
+          console.log({op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y})
+        }
+        console.log('end')
+        var edge_path = new Path(commands)
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path
       }
@@ -444,9 +499,98 @@ var main = function() {
 
   g.image = new Image()
   g.image.src = 'picture.png';
-  g.image.onload = function() {
-    setup_game()
+  // g.image.onload = function() {
+  //   setup_game()
+  // }
+
+  var canvas = document.createElement('canvas')
+  canvas.style.top = 0
+  canvas.style.left = 0
+  canvas.width = 500
+  canvas.height = 500
+  canvas.style.border = '1px solid red'
+  document.body.appendChild(canvas)
+  var ctx = canvas.getContext('2d')
+  var alpha = 0
+
+  var f = function(){
+  var previous_point = new Point(-100, 0)
+  var current_point = new Point(0, 0)
+  var next_point = new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100)
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.save()
+  ctx.translate(200, 200)
+  ctx.beginPath()
+  ctx.moveTo(previous_point.x, previous_point.y)
+  ctx.lineTo(current_point.x, current_point.y)
+  ctx.strokeStyle = 'red'
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(current_point.x, current_point.y)
+  ctx.lineTo(next_point.x, next_point.y)
+  ctx.strokeStyle = 'blue'
+  ctx.stroke()
+  var angle = function(a, b) {
+    na = a.normalized()
+    nb = b.normalized()
+    return Math.acos(na.x * nb.x, na.y * nb.y)
   }
+  var v1 = previous_point.subtract(current_point).normalized()
+  var v2 = next_point.subtract(current_point).normalized()
+  var delta = (Math.PI - angle(v1, v2))/2
+  var theta = Math.atan2(v2.y, v2.x)
+  // console.log(theta / Math.PI * 180, v2.x, v2.y)
+  // had some issues with not being at 0, 0, be careful with final version
+  if (theta < 0) {
+  var gamma = theta + delta
+  } else {
+  var gamma = theta - delta
+  }
+  // console.log(gamma * 180 / Math.PI)
+  var p = new Point(Math.cos(gamma), Math.sin(gamma)).multiply_scalar(100)
+  // convert to polar
+
+  // var p = .add()
+  // console.log(p)
+
+  ctx.beginPath()
+  ctx.moveTo(current_point.x,current_point.y)
+  ctx.lineTo(p.x, p.y)
+  ctx.strokeStyle = 'green'
+  ctx.stroke()
+  ctx.restore()
+  alpha+=Math.PI / 180 * 1
+}
+// setInterval(f, 50)
+// f()
+
+  // console.log(p.invert().to_string())
+  //
+  // p.render(ctx)
+  // // p.invert().render(ctx)
+  // ctx.lineTo(200, 0)
+  // // ctx.bezierCurveTo(110,102,130,80,100,0);
+  // // ctx.lineTo(100, 0)
+
+  //
+  // ctx.save()
+  //
+  // ctx.translate(100, 100)
+  // ctx.beginPath()
+  // ctx.moveTo(0, 0)
+  // ctx.rotate(Math.PI / 2)
+  // // ctx.scale(-1, -1)
+  // for (var d = 0; d < DIRECTIONS; d++) {
+  //   p.render(ctx)
+  //   ctx.lineTo(PIECE_SIZE, 0)
+  //   ctx.translate(PIECE_SIZE, 0)
+  //   ctx.rotate(-Math.PI / 2)
+  // }
+  // ctx.closePath()
+  // ctx.fill()
+  //
+  // ctx.restore()
 }
 
 window.onload = main
