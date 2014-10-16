@@ -406,11 +406,12 @@ var setup_game = function() {
           var previous_point = points[i]
           var current_point = points[i+1]
           var next_point = points[i+2]
-          previous_point.subtract(current_point).normalized() + next_point.subtract(current_point).normalized()
+          // previous_point.subtract(current_point).normalized() + next_point.subtract(current_point).normalized()
           var cp1 = previous_point.add(directions[i])
           var cp2 = current_point.subtract(directions[i+1])
-          commands.push({op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y})
-          console.log({op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y})
+          var command = {op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y}
+          commands.push(command)
+          console.log(command)
         }
         console.log('end')
         var edge_path = new Path(commands)
@@ -503,6 +504,9 @@ var main = function() {
   //   setup_game()
   // }
 
+  // calculate the tangent line for arbitary points
+  // use this to make symmetric control points on the curves
+
   var canvas = document.createElement('canvas')
   canvas.style.top = 0
   canvas.style.left = 0
@@ -514,55 +518,57 @@ var main = function() {
   var alpha = 0
 
   var f = function(){
-  var previous_point = new Point(-100, 0)
-  var current_point = new Point(0, 0)
-  var next_point = new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100)
+    var previous_point = new Point(0, 0)
+    // var current_point = previous_point.add(new Point(1, 0).multiply_scalar(100))
+    var current_point = previous_point.add(new Point(0.707, 0.707).multiply_scalar(100))
+    var next_point = current_point.add(new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100))
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.save()
-  ctx.translate(200, 200)
-  ctx.beginPath()
-  ctx.moveTo(previous_point.x, previous_point.y)
-  ctx.lineTo(current_point.x, current_point.y)
-  ctx.strokeStyle = 'red'
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.moveTo(current_point.x, current_point.y)
-  ctx.lineTo(next_point.x, next_point.y)
-  ctx.strokeStyle = 'blue'
-  ctx.stroke()
-  var angle = function(a, b) {
-    na = a.normalized()
-    nb = b.normalized()
-    return Math.acos(na.x * nb.x, na.y * nb.y)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.save()
+    ctx.translate(200, 200)
+    ctx.beginPath()
+    ctx.moveTo(previous_point.x, previous_point.y)
+    ctx.lineTo(current_point.x, current_point.y)
+    ctx.strokeStyle = 'red'
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(current_point.x, current_point.y)
+    ctx.lineTo(next_point.x, next_point.y)
+    ctx.strokeStyle = 'blue'
+    ctx.stroke()
+
+    var angle = function(a, b) {
+      na = a.normalized()
+      nb = b.normalized()
+      return Math.acos(na.x * nb.x + na.y * nb.y)
+    }
+    var v1 = previous_point.subtract(current_point).normalized()
+    var v2 = next_point.subtract(current_point).normalized()
+
+    var delta = (Math.PI - angle(v1, v2))/2 // angle between the two lines and the tangent line
+    var v1_angle = Math.atan2(v1.y, v1.x) // absolute angle between v1 and horizontal
+    var v2_angle = Math.atan2(v2.y, v2.x) // absolute angle between v2 and horizontal
+    if (v2_angle > v1_angle && v2_angle < v1_angle + Math.PI) {
+      var gamma = v2_angle + delta
+    } else {
+      var gamma = v2_angle - delta
+    }
+    // console.log(gamma * 180 / Math.PI)
+    var p = current_point.add(new Point(Math.cos(gamma), Math.sin(gamma)).multiply_scalar(100))
+    // convert to polar
+
+    // var p = .add()
+    // console.log(p)
+
+    ctx.beginPath()
+    ctx.moveTo(current_point.x,current_point.y)
+    ctx.lineTo(p.x, p.y)
+    ctx.strokeStyle = 'green'
+    ctx.stroke()
+    ctx.restore()
+    alpha+=Math.PI / 180 * 1
   }
-  var v1 = previous_point.subtract(current_point).normalized()
-  var v2 = next_point.subtract(current_point).normalized()
-  var delta = (Math.PI - angle(v1, v2))/2
-  var theta = Math.atan2(v2.y, v2.x)
-  // console.log(theta / Math.PI * 180, v2.x, v2.y)
-  // had some issues with not being at 0, 0, be careful with final version
-  if (theta < 0) {
-  var gamma = theta + delta
-  } else {
-  var gamma = theta - delta
-  }
-  // console.log(gamma * 180 / Math.PI)
-  var p = new Point(Math.cos(gamma), Math.sin(gamma)).multiply_scalar(100)
-  // convert to polar
-
-  // var p = .add()
-  // console.log(p)
-
-  ctx.beginPath()
-  ctx.moveTo(current_point.x,current_point.y)
-  ctx.lineTo(p.x, p.y)
-  ctx.strokeStyle = 'green'
-  ctx.stroke()
-  ctx.restore()
-  alpha+=Math.PI / 180 * 1
-}
-// setInterval(f, 50)
+setInterval(f, 100)
 // f()
 
   // console.log(p.invert().to_string())
