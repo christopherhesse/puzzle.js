@@ -37,6 +37,9 @@ Point.prototype = {
   normalized: function() {
     return new Point(this.x / this.magnitude(), this.y / this.magnitude())
   },
+  toString: function() {
+    return "Point(" + this.x.toFixed(3) + "," + this.y.toFixed(3) + ")"
+  },
 }
 
 //-------------------------------------------------
@@ -390,28 +393,38 @@ var setup_game = function() {
         //   new Point(5, -5), // 8
         //   new Point(0, 0), // 9
         // ]
+
         var directions = [
-          new Point(0, 0), // 1
-          new Point(0, 0), // 2
-          new Point(0, 0), // 3
-          new Point(0, 0), // 4
-          new Point(0, 0), // 5
-          new Point(0, 0), // 6
-          new Point(0, 0), // 7
-          new Point(0, 0), // 8
-          new Point(0, 0), // 9
+          new Point(0, 0),
         ]
+        for (var i = 1; i < points.length - 1; i++) {
+          var tangent_point = find_tangent_point(points[i-1], points[i], points[i+1])
+          directions.push(tangent_point)
+        }
+        directions.push(new Point(0, 0))
+
+        var magnitudes = [
+          0, // 1
+          5, // 2
+          2, // 3
+          5, // 4
+          5, // 5
+          5, // 6
+          2, // 7
+          5, // 8
+          0, // 9
+        ]
+
         var commands = []
         for (var i = 0; i < points.length - 1; i++) {
-          var previous_point = points[i]
-          var current_point = points[i+1]
-          var next_point = points[i+2]
-          // previous_point.subtract(current_point).normalized() + next_point.subtract(current_point).normalized()
-          var cp1 = previous_point.add(directions[i])
-          var cp2 = current_point.subtract(directions[i+1])
-          var command = {op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: current_point.x, y: current_point.y}
+          var p1 = points[i]
+          var p2 = points[i+1]
+          var cp1 = p1.add(directions[i].multiply_scalar(magnitudes[i]))
+          var cp2 = p2.subtract(directions[i+1].multiply_scalar(magnitudes[i+1]))
+          console.log(i, points[i].toString(), directions[i].toString(), cp1.toString(), magnitudes[i])
+          var command = {op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: p2.x, y: p2.y}
           commands.push(command)
-          console.log(command)
+          // console.log(command)
         }
         console.log('end')
         var edge_path = new Path(commands)
@@ -495,81 +508,82 @@ var setup_game = function() {
   }
 }
 
+var find_tangent_point = function(p1, p2, p3) {
+  var v1 = p1.subtract(p2).normalized()
+  var v2 = p3.subtract(p2).normalized()
+  var v1_angle = Math.atan2(v1.y, v1.x) // absolute angle between v1 and horizontal
+  var v2_angle = Math.atan2(v2.y, v2.x) // absolute angle between v2 and horizontal
+  var theta = v2_angle - v1_angle // angle between the two lines
+  // normalize to [-Math.PI, Math.PI]
+  if (theta < -Math.PI) {
+    theta += Math.PI*2
+  }
+  var delta = (Math.PI - Math.abs(theta))/2 // angle between the two lines and the tangent line
+  if (theta > 0) {
+    var gamma = v2_angle + delta
+  } else {
+    var gamma = v2_angle - delta
+  }
+  return new Point(Math.cos(gamma), Math.sin(gamma))
+}
+
 var main = function() {
   document.body.style['background-color'] = '#534'
 
   g.image = new Image()
   g.image.src = 'picture.png';
-  // g.image.onload = function() {
-  //   setup_game()
-  // }
-
-  // calculate the tangent line for arbitary points
-  // use this to make symmetric control points on the curves
-
-  var canvas = document.createElement('canvas')
-  canvas.style.top = 0
-  canvas.style.left = 0
-  canvas.width = 500
-  canvas.height = 500
-  canvas.style.border = '1px solid red'
-  document.body.appendChild(canvas)
-  var ctx = canvas.getContext('2d')
-  var alpha = 0
-
-  var f = function(){
-    var previous_point = new Point(0, 0)
-    // var current_point = previous_point.add(new Point(1, 0).multiply_scalar(100))
-    var current_point = previous_point.add(new Point(0.707, 0.707).multiply_scalar(100))
-    var next_point = current_point.add(new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100))
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.save()
-    ctx.translate(200, 200)
-    ctx.beginPath()
-    ctx.moveTo(previous_point.x, previous_point.y)
-    ctx.lineTo(current_point.x, current_point.y)
-    ctx.strokeStyle = 'red'
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(current_point.x, current_point.y)
-    ctx.lineTo(next_point.x, next_point.y)
-    ctx.strokeStyle = 'blue'
-    ctx.stroke()
-
-    var angle = function(a, b) {
-      na = a.normalized()
-      nb = b.normalized()
-      return Math.acos(na.x * nb.x + na.y * nb.y)
-    }
-    var v1 = previous_point.subtract(current_point).normalized()
-    var v2 = next_point.subtract(current_point).normalized()
-
-    var delta = (Math.PI - angle(v1, v2))/2 // angle between the two lines and the tangent line
-    var v1_angle = Math.atan2(v1.y, v1.x) // absolute angle between v1 and horizontal
-    var v2_angle = Math.atan2(v2.y, v2.x) // absolute angle between v2 and horizontal
-    if (v2_angle > v1_angle && v2_angle < v1_angle + Math.PI) {
-      var gamma = v2_angle + delta
-    } else {
-      var gamma = v2_angle - delta
-    }
-    // console.log(gamma * 180 / Math.PI)
-    var p = current_point.add(new Point(Math.cos(gamma), Math.sin(gamma)).multiply_scalar(100))
-    // convert to polar
-
-    // var p = .add()
-    // console.log(p)
-
-    ctx.beginPath()
-    ctx.moveTo(current_point.x,current_point.y)
-    ctx.lineTo(p.x, p.y)
-    ctx.strokeStyle = 'green'
-    ctx.stroke()
-    ctx.restore()
-    alpha+=Math.PI / 180 * 1
+  g.image.onload = function() {
+    setup_game()
   }
-setInterval(f, 100)
-// f()
+
+  // console.log(find_tangent_point(new Point(90, 10), new Point(85, 20), new Point(100, 30)))
+  // console.log(find_tangent_point(new Point(0, 0), new Point(-5, 10), new Point(10, 20)))
+  // console.log(find_tangent_point(new Point(100, 30), new Point(85, 20), new Point(90, 10)))
+  // console.log(find_tangent_point(new Point(100, 30), new Point(115, 20), new Point(110, 10)))
+  // console.log(find_tangent_point(new Point(0, 0), new Point(15, -10), new Point(10, -20)))
+
+  // var canvas = document.createElement('canvas')
+  // canvas.style.top = 0
+  // canvas.style.left = 0
+  // canvas.width = 500
+  // canvas.height = 500
+  // canvas.style.border = '1px solid red'
+  // document.body.appendChild(canvas)
+  // var ctx = canvas.getContext('2d')
+  // var alpha = 0
+  // var f = function(){
+  //   var previous_point = new Point(0, 0)
+  //   var current_point = new Point(15, -10).multiply_scalar(5)
+  //   var next_point = new Point(10, -20).multiply_scalar(5)
+  //   // var current_point = previous_point.add(new Point(0.707, 0.707).multiply_scalar(100))
+  //   // var next_point = current_point.add(new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100))
+  //
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height)
+  //   ctx.save()
+  //   ctx.translate(200, 200)
+  //   ctx.beginPath()
+  //   ctx.moveTo(previous_point.x, previous_point.y)
+  //   ctx.lineTo(current_point.x, current_point.y)
+  //   ctx.strokeStyle = 'red'
+  //   ctx.stroke()
+  //   ctx.beginPath()
+  //   ctx.moveTo(current_point.x, current_point.y)
+  //   ctx.lineTo(next_point.x, next_point.y)
+  //   ctx.strokeStyle = 'blue'
+  //   ctx.stroke()
+  //
+  //   var p = current_point.add(find_tangent_point(previous_point, current_point, next_point).multiply_scalar(100))
+  //
+  //   ctx.beginPath()
+  //   ctx.moveTo(current_point.x,current_point.y)
+  //   ctx.lineTo(p.x, p.y)
+  //   ctx.strokeStyle = 'green'
+  //   ctx.stroke()
+  //   ctx.restore()
+  //   alpha+=Math.PI / 180 * 1
+  // }
+  // // setInterval(f, 500)
+  // f()
 
   // console.log(p.invert().to_string())
   //
