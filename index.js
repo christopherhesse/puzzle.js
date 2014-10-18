@@ -40,6 +40,44 @@ Point.prototype = {
   toString: function() {
     return "Point(" + this.x.toFixed(3) + "," + this.y.toFixed(3) + ")"
   },
+  tangent: function(previous_point, next_point) {
+    var v1 = previous_point.subtract(this).normalized()
+    var v2 = next_point.subtract(this).normalized()
+    var v1_angle = Math.atan2(v1.y, v1.x) // absolute angle between v1 and horizontal
+    var v2_angle = Math.atan2(v2.y, v2.x) // absolute angle between v2 and horizontal
+    var theta = v2_angle - v1_angle // angle between the two lines
+    // normalize to [-Math.PI, Math.PI]
+    if (theta < -Math.PI) {
+      theta += Math.PI*2
+    }
+    var delta = (Math.PI - Math.abs(theta))/2 // angle between the two lines and the tangent line
+    if (theta > 0) {
+      var gamma = v2_angle + delta
+    } else {
+      var gamma = v2_angle - delta
+    }
+    return new Point(Math.cos(gamma), Math.sin(gamma))
+  },
+}
+
+var LINE = 0
+var BEZIER = 1
+
+var Path = function(commands) {
+  this.commands = commands
+}
+
+Path.prototype = {
+  render: function(ctx) {
+    for (var i = 0; i < this.commands.length; i++) {
+      var c = this.commands[i]
+      if (c.op == LINE) {
+        ctx.lineTo(c.x, c.y)
+      } else if (c.op == BEZIER) {
+        ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.x, c.y)
+      }
+    }
+  },
 }
 
 //-------------------------------------------------
@@ -105,26 +143,6 @@ var tile_to_center = function(tile) {
 
 var row_col_to_tile = function(row, col) {
   return col + row * g.col_count
-}
-
-var LINE = 0
-var BEZIER = 1
-
-var Path = function(commands) {
-  this.commands = commands
-}
-
-Path.prototype = {
-  render: function(ctx) {
-    for (var i = 0; i < this.commands.length; i++) {
-      var c = this.commands[i]
-      if (c.op == LINE) {
-        ctx.lineTo(c.x, c.y)
-      } else if (c.op == BEZIER) {
-        ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, c.x, c.y)
-      }
-    }
-  },
 }
 
 var create_piece = function(tiles) {
@@ -387,7 +405,7 @@ var setup_game = function() {
           new Point(0, 0),
         ]
         for (var i = 1; i < points.length - 1; i++) {
-          var tangent_point = find_tangent_point(points[i-1], points[i], points[i+1])
+          var tangent_point = points[i].tangent(points[i-1], points[i+1])
           directions.push(tangent_point)
         }
         directions.push(new Point(0, 0))
@@ -480,25 +498,6 @@ var setup_game = function() {
       active_piece.style.top = e.y - active_cursor_point.y
     }
   }
-}
-
-var find_tangent_point = function(p1, p2, p3) {
-  var v1 = p1.subtract(p2).normalized()
-  var v2 = p3.subtract(p2).normalized()
-  var v1_angle = Math.atan2(v1.y, v1.x) // absolute angle between v1 and horizontal
-  var v2_angle = Math.atan2(v2.y, v2.x) // absolute angle between v2 and horizontal
-  var theta = v2_angle - v1_angle // angle between the two lines
-  // normalize to [-Math.PI, Math.PI]
-  if (theta < -Math.PI) {
-    theta += Math.PI*2
-  }
-  var delta = (Math.PI - Math.abs(theta))/2 // angle between the two lines and the tangent line
-  if (theta > 0) {
-    var gamma = v2_angle + delta
-  } else {
-    var gamma = v2_angle - delta
-  }
-  return new Point(Math.cos(gamma), Math.sin(gamma))
 }
 
 var main = function() {
