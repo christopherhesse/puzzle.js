@@ -53,6 +53,10 @@ var random = function() {
   return x - Math.floor(x)
 }
 
+var random2 = function() {
+  return 2 * (0.5 - random())
+}
+
 // global
 
 var g = {}
@@ -179,7 +183,7 @@ var create_piece = function(tiles) {
 
         if (edge_path !== null) {
           ctx.save()
-          ctx.scale(0.5, 0.5)
+          ctx.scale(PIECE_SIZE, PIECE_SIZE)
           edge_path.render(ctx)
           ctx.restore()
         } else {
@@ -341,28 +345,42 @@ var setup_game = function() {
         g.edge_paths[tile][d] = null
       } else {
         var points = [
-          new Point(0, 0), // 1
-          new Point(90, 0), // 2
-          new Point(90, 10), // 3
-          new Point(85, 20), // 4
-          new Point(100, 30), // 5
-          new Point(115, 20), // 6
-          new Point(110, 10), // 7
-          new Point(110, 0), // 8
-          new Point(200, 0), // 9
+          new Point(0.00, 0), // 1
+          new Point(0.25, 0), // 2
+          new Point(0.25, 0.3), // 3
+          new Point(0.00, 0.6), // 4
+          new Point(0.50, 1.0), // 5
+          new Point(1.00, 0.6), // 6
+          new Point(0.75, 0.3), // 7
+          new Point(0.75, 0), // 8
+          new Point(1.00, 0), // 9
         ]
 
         var magnitudes = [
           0, // 1
-          5, // 2
-          2, // 3
-          5, // 4
-          5, // 5
-          5, // 6
-          2, // 7
-          5, // 8
+          1, // 2
+          0.4, // 3
+          1, // 4
+          1, // 5
+          1, // 6
+          0.4, // 7
+          1, // 8
           0, // 9
         ]
+
+        var x_scale = 0.3
+        var y_scale = 0.3 * Math.sign(random2()) // make it so that pieces are not all inward or outward nubbins
+        var x_offset = 0.05 * random2()
+        var y_offset = 0.1 * random2()
+        var magnitude_scale = 0.05
+
+        for (var i = 1; i < points.length - 1; i++) {
+          var p = points[i]
+          var px = ((p.x - 0.5) * x_scale + 0.5) + 0.01 * random2() + x_offset
+          var py = p.y * y_scale + 0.01 * random2() + y_offset
+          points[i] = new Point(px, py)
+          magnitudes[i] = magnitude_scale * magnitudes[i] * (1 + 0.25 * random2())
+        }
 
         // generate symmetric control points for each point
         var directions = [
@@ -373,15 +391,6 @@ var setup_game = function() {
           directions.push(tangent_point)
         }
         directions.push(new Point(0, 0))
-
-        var x_offset = 30 * (0.5 - random())
-        var y_offset = 30 * (0.5 - random())
-
-        for (var i = 1; i < points.length - 1; i++) {
-          var p = points[i]
-          points[i] = new Point(p.x + 2 * (0.5 - random()) + x_offset, p.y + 2 * (0.5 - random()) + y_offset)
-          magnitudes[i] = magnitudes[i] * (1 + 0.1 * (0.5 - random()))
-        }
 
         var commands = []
         for (var i = 0; i < points.length - 1; i++) {
@@ -500,82 +509,6 @@ var main = function() {
   g.image.onload = function() {
     setup_game()
   }
-
-  // console.log(find_tangent_point(new Point(90, 10), new Point(85, 20), new Point(100, 30)))
-  // console.log(find_tangent_point(new Point(0, 0), new Point(-5, 10), new Point(10, 20)))
-  // console.log(find_tangent_point(new Point(100, 30), new Point(85, 20), new Point(90, 10)))
-  // console.log(find_tangent_point(new Point(100, 30), new Point(115, 20), new Point(110, 10)))
-  // console.log(find_tangent_point(new Point(0, 0), new Point(15, -10), new Point(10, -20)))
-
-  // var canvas = document.createElement('canvas')
-  // canvas.style.top = 0
-  // canvas.style.left = 0
-  // canvas.width = 500
-  // canvas.height = 500
-  // canvas.style.border = '1px solid red'
-  // document.body.appendChild(canvas)
-  // var ctx = canvas.getContext('2d')
-  // var alpha = 0
-  // var f = function(){
-  //   var previous_point = new Point(0, 0)
-  //   var current_point = new Point(15, -10).multiply_scalar(5)
-  //   var next_point = new Point(10, -20).multiply_scalar(5)
-  //   // var current_point = previous_point.add(new Point(0.707, 0.707).multiply_scalar(100))
-  //   // var next_point = current_point.add(new Point(Math.cos(alpha), Math.sin(alpha)).multiply_scalar(100))
-  //
-  //   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  //   ctx.save()
-  //   ctx.translate(200, 200)
-  //   ctx.beginPath()
-  //   ctx.moveTo(previous_point.x, previous_point.y)
-  //   ctx.lineTo(current_point.x, current_point.y)
-  //   ctx.strokeStyle = 'red'
-  //   ctx.stroke()
-  //   ctx.beginPath()
-  //   ctx.moveTo(current_point.x, current_point.y)
-  //   ctx.lineTo(next_point.x, next_point.y)
-  //   ctx.strokeStyle = 'blue'
-  //   ctx.stroke()
-  //
-  //   var p = current_point.add(find_tangent_point(previous_point, current_point, next_point).multiply_scalar(100))
-  //
-  //   ctx.beginPath()
-  //   ctx.moveTo(current_point.x,current_point.y)
-  //   ctx.lineTo(p.x, p.y)
-  //   ctx.strokeStyle = 'green'
-  //   ctx.stroke()
-  //   ctx.restore()
-  //   alpha+=Math.PI / 180 * 1
-  // }
-  // // setInterval(f, 500)
-  // f()
-
-  // console.log(p.invert().to_string())
-  //
-  // p.render(ctx)
-  // // p.invert().render(ctx)
-  // ctx.lineTo(200, 0)
-  // // ctx.bezierCurveTo(110,102,130,80,100,0);
-  // // ctx.lineTo(100, 0)
-
-  //
-  // ctx.save()
-  //
-  // ctx.translate(100, 100)
-  // ctx.beginPath()
-  // ctx.moveTo(0, 0)
-  // ctx.rotate(Math.PI / 2)
-  // // ctx.scale(-1, -1)
-  // for (var d = 0; d < DIRECTIONS; d++) {
-  //   p.render(ctx)
-  //   ctx.lineTo(PIECE_SIZE, 0)
-  //   ctx.translate(PIECE_SIZE, 0)
-  //   ctx.rotate(-Math.PI / 2)
-  // }
-  // ctx.closePath()
-  // ctx.fill()
-  //
-  // ctx.restore()
 }
 
 window.onload = main
