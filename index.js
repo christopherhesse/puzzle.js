@@ -58,7 +58,8 @@ var random = function() {
 var g = {}
 
 var MATCH_DISTANCE = 20
-var PIECE_SIZE = 200
+var PIECE_SIZE = 100
+var PADDING_SIZE = 50
 
 var UP = 0
 var RIGHT = 1
@@ -127,7 +128,7 @@ var create_piece = function(tiles) {
   var cols = tiles.map(tile_to_col)
   var row_span = max(rows) - min(rows) + 1
   var col_span = max(cols) - min(cols) + 1
-  var border_width = 30
+  var border_width = PADDING_SIZE
 
   var p = document.createElement('canvas')
   p.className = 'piece'
@@ -177,7 +178,10 @@ var create_piece = function(tiles) {
         }
 
         if (edge_path !== null) {
+          ctx.save()
+          ctx.scale(0.5, 0.5)
           edge_path.render(ctx)
+          ctx.restore()
         } else {
           ctx.lineTo(PIECE_SIZE, 0)
         }
@@ -198,8 +202,7 @@ var create_piece = function(tiles) {
       c.width = size.x
       c.height = size.y
       var ctx = c.getContext('2d')
-      ctx.drawImage(image, src.x, src.y, size.x, size.y, 0, 0, size.x, size
-        .y)
+      ctx.drawImage(image, src.x, src.y, size.x, size.y, 0, 0, size.x, size.y)
       ctx.globalCompositeOperation = 'destination-in'
       mask_f(ctx)
       ctx.fill()
@@ -337,39 +340,6 @@ var setup_game = function() {
       if (neighbor_tile === null) {
         g.edge_paths[tile][d] = null
       } else {
-        // var y1 = Math.floor(random() * 10)
-        // var y2 = Math.floor(random() * 10)
-        // var y3 = Math.floor(random() * 10)
-        // var edge_path = new Path([
-        //   {
-        //     op: LINE,
-        //     x: PIECE_SIZE * 1/4,
-        //     y: y1
-        //   },
-        //   {
-        //     op: LINE,
-        //     x: PIECE_SIZE * 2/4,
-        //     y: y2
-        //   },
-        //   {
-        //     op: LINE,
-        //     x: PIECE_SIZE * 3/4,
-        //     y: y3
-        //   },
-        //   {
-        //     op: LINE,
-        //     x: PIECE_SIZE * 4/4,
-        //     y: 0
-        //   },
-        // ])
-        // var sign = function(x) { return x ? x < 0 ? -1 : 1 : 0 }
-        // var s = sign(random()-0.5)
-        // var edge_path = new Path([
-        //   {op: LINE, x: 75, y: 0},
-        //   {op: BEZIER, cp1x: 75, cp1y: s * 30, cp2x: 125, cp2y: s * 30, x: 125, y: 0},
-        //   {op: LINE, x: 200, y:0}
-        // ])
-        // bezier curves with symmetric control points, variable magnitude
         var points = [
           new Point(0, 0), // 1
           new Point(90, 0), // 2
@@ -381,27 +351,6 @@ var setup_game = function() {
           new Point(110, 0), // 8
           new Point(200, 0), // 9
         ]
-        // TODO: replace these with magnitudes? how to get slope?
-        // var directions = [
-        //   new Point(0, 0), // 1
-        //   new Point(5, 5), // 2
-        //   new Point(-5, 5), // 3
-        //   new Point(0, 10), // 4
-        //   new Point(10, 0), // 5
-        //   new Point(0, -10), // 6
-        //   new Point(-5, -5), // 7
-        //   new Point(5, -5), // 8
-        //   new Point(0, 0), // 9
-        // ]
-
-        var directions = [
-          new Point(0, 0),
-        ]
-        for (var i = 1; i < points.length - 1; i++) {
-          var tangent_point = find_tangent_point(points[i-1], points[i], points[i+1])
-          directions.push(tangent_point)
-        }
-        directions.push(new Point(0, 0))
 
         var magnitudes = [
           0, // 1
@@ -415,18 +364,34 @@ var setup_game = function() {
           0, // 9
         ]
 
+        // generate symmetric control points for each point
+        var directions = [
+          new Point(0, 0),
+        ]
+        for (var i = 1; i < points.length - 1; i++) {
+          var tangent_point = find_tangent_point(points[i-1], points[i], points[i+1])
+          directions.push(tangent_point)
+        }
+        directions.push(new Point(0, 0))
+
+        var x_offset = 30 * (0.5 - random())
+        var y_offset = 30 * (0.5 - random())
+
+        for (var i = 1; i < points.length - 1; i++) {
+          var p = points[i]
+          points[i] = new Point(p.x + 2 * (0.5 - random()) + x_offset, p.y + 2 * (0.5 - random()) + y_offset)
+          magnitudes[i] = magnitudes[i] * (1 + 0.1 * (0.5 - random()))
+        }
+
         var commands = []
         for (var i = 0; i < points.length - 1; i++) {
           var p1 = points[i]
           var p2 = points[i+1]
           var cp1 = p1.add(directions[i].multiply_scalar(magnitudes[i]))
           var cp2 = p2.subtract(directions[i+1].multiply_scalar(magnitudes[i+1]))
-          console.log(i, points[i].toString(), directions[i].toString(), cp1.toString(), magnitudes[i])
           var command = {op: BEZIER, cp1x: cp1.x, cp1y: cp1.y, cp2x: cp2.x, cp2y: cp2.y, x: p2.x, y: p2.y}
           commands.push(command)
-          // console.log(command)
         }
-        console.log('end')
         var edge_path = new Path(commands)
         g.edge_paths[tile][d] = edge_path
         g.edge_paths[neighbor_tile][invert_direction(d)] = edge_path
