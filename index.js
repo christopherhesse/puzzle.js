@@ -387,7 +387,10 @@ var setup_game = function() {
         ]
 
         var x_scale = 0.3
-        var y_scale = 0.3 * Math.sign(random2()) // make it so that pieces are not all inward or outward nubbins
+        var y_scale = 0.3
+        if (random2() > 0.5) {
+          y_scale *= -1 // make it so that pieces are not all inward or outward nubbins
+        }
         var x_offset = 0.05 * random2()
         var y_offset = 0.1 * random2()
         var magnitude_scale = 0.05
@@ -432,7 +435,7 @@ var setup_game = function() {
     piece.style.top = Math.random() * 300
     piece.style.left = Math.random() * 1000
     // piece.style.top = 150
-    // piece.style.left = 300 * tile
+    // piece.style.left = 300
     document.body.appendChild(piece)
   }
 
